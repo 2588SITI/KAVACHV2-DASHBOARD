@@ -4,62 +4,94 @@ import pandas as pd
 import plotly.express as px
 
 # Set page configuration
-st.set_page_config(page_title="KAVACH Failure Analysis Dashboard", layout="wide")
+st.set_page_config(page_title="KAVACH Analysis TRO", layout="wide")
 
-# Title of the Dashboard
+# Title
 st.title("🛡️ KAVACH Failure Analysis Dashboard")
 
-# 1. Load Data (Replace 'your_file.csv' with your exported CSV from Google Sheets)
-@st.cache_data
-def load_data():
-    # Example data based on your Google Sheet 
-    data = {
-        'Date': ['2026-02-08', '2026-02-08', '2026-02-08', '2026-02-09', '2026-02-12', '2026-02-13', '2026-02-14', '2026-02-14', '2026-02-15'],
-        'Train No.': [12935, 12936, 12925, 19011, 12925, 12925, 12925, 22959, 12922],
-        'Loco No.': [37164, 37164, 37339, 37577, 30823, 39529, 37111, 39238, 30758],
-        'Section': ['VR-ST', 'ST-VR', 'ST-VR', 'BL-ST', 'VR-ST', 'VR-ST', 'VR-ST', '-', 'ST-VR'],
-        'Observation': [
-            'Loco packets not received', 'Loco packets not received', 'Loco Packets not received',
-            'Loco packets not received', 'Loco packets not received', 'Loco Packets not received',
-            'One Tag Missing', 'Significant radio communication issues', 'Train stopped; SOS generated'
-        ],
-        'Reason': [
-            'RFID damaged (Tag 695)', 'GVD Section Packets missed', 'Tag 577 removed',
-            'Radio 2 failure', 'Investigation required', 'Packet loss Radio 1',
-            'Foreign tags detected', 'Track Profile Not Read', 'No Network/SOS malfunction'
-        ]
-    }
-    df = pd.DataFrame(data)
-    df['Date'] = pd.to_datetime(df['Date'])
-    return df
+# --- DATA LOADING SECTION ---
+# 1. Open your Google Sheet
+# 2. File > Share > Publish to web
+# 3. Select your Tab/Sheet, change 'Web Page' to 'CSV', and paste the links below:
 
-df = load_data()
+SHEET_1_URL = "PASTE_YOUR_FIRST_SHEET_CSV_URL_HERE"
+SHEET_2_URL = "PASTE_YOUR_NEW_SHEET_CSV_URL_HERE"
 
-# 2. Sidebar Filters
-st.sidebar.header("Filters")
-selected_loco = st.sidebar.multiselect("Select Loco No.", options=df['Loco No.'].unique(), default=df['Loco No.'].unique())
-filtered_df = df[df['Loco No.'].isin(selected_loco)]
+@st.cache_data(ttl=300) # Refreshes every 5 minutes
+def load_live_data(url):
+    try:
+        df = pd.read_csv(url)
+        # Ensure 'Date' is handled correctly if it exists
+        if 'Date' in df.columns:
+            df['Date'] = pd.to_datetime(df['Date'])
+        return df
+    except Exception as e:
+        st.error(f"Error loading data: {e}")
+        return pd.DataFrame()
 
-# 3. Key Metrics
-col1, col2, col3 = st.columns(3)
-col1.metric("Total Failures", len(filtered_df))
-col2.metric("Unique Locos Affected", filtered_df['Loco No.'].nunique())
-col3.metric("Most Frequent Train", filtered_df['Train No.'].mode()[0])
+# --- SIDEBAR NAVIGATION ---
+st.sidebar.header("Data Settings")
+data_choice = st.sidebar.radio("Select Report Tab:", ["Failure Report", "New Analysis Sheet"])
 
-# 4. Visualizations
-st.markdown("---")
-c1, c2 = st.columns(2)
+# Load the chosen data
+if data_choice == "Failure Report":
+    current_url = SHEET_1_URL
+else:
+    current_url = SHEET_2_URL
 
-with c1:
-    st.subheader("Failures Over Time")
-    fig_date = px.histogram(filtered_df, x="Date", color="Loco No.", barmode="group", title="Trend of Observations")
-    st.plotly_chart(fig_date, use_container_width=True)
+df = load_live_data(current_url)
 
-with c2:
-    st.subheader("Failures by Loco No.")
-    fig_loco = px.pie(filtered_df, names="Loco No.", title="Loco Distribution")
-    st.plotly_chart(fig_loco, use_container_width=True)
+# --- DASHBOARD LOGIC ---
+if not df.empty:
+    # Sidebar Filters
+    st.sidebar.markdown("---")
+    st.sidebar.header("Filters")
+    
+    # Check if 'Loco No.' exists in the current sheet to prevent errors
+    if 'Loco No.' in df.columns:
+        selected_loco = st.sidebar.multiselect(
+            "Select Loco No.", 
+            options=df['Loco No.'].unique(), 
+            default=df['Loco No.'].unique()
+        )
+        filtered_df = df[df['Loco No.'].isin(selected_loco)]
+    else:
+        filtered_df = df
 
-# 5. Data Table
-st.subheader("Detailed Failure Logs")
-st.dataframe(filtered_df, use_container_width=True)
+    # 3. Key Metrics
+    m1, m2, m3 = st.columns(3)
+    m1.metric("Total Entries", len(filtered_df))
+    
+    if 'Loco No.' in df.columns:
+        m2.metric("Unique Locos", filtered_df['Loco No.'].nunique())
+    
+    if 'Reason' in df.columns:
+        top_reason = filtered_df['Reason'].mode()[0] if not filtered_df['Reason'].empty else "N/A"
+        m3.metric("Primary Reason", top_reason)
+
+    # 4. Visualizations
+    st.markdown("---")
+    c1, c2 = st.columns(2)
+
+    with c1:
+        if 'Date' in filtered_df.columns:
+            st.subheader("Trend Over Time")
+            fig_date = px.histogram(filtered_df, x="Date", title="Log Frequency")
+            st.plotly_chart(fig_date, use_container_width=True)
+        else:
+            st.info("No 'Date' column found in this sheet for trending.")
+
+    with c2:
+        if 'Reason' in filtered_df.columns:
+            st.subheader("Failure Distribution")
+            fig_reason = px.bar(filtered_df['Reason'].value_counts(), title="Top Failure Reasons")
+            st.plotly_chart(fig_reason, use_container_width=True)
+        else:
+            st.info("No 'Reason' column found for distribution.")
+
+    # 5. Data Table
+    st.subheader("Raw Data View")
+    st.dataframe(filtered_df, use_container_width=True)
+
+else:
+    st.warning("Please paste your 'Publish to Web' CSV URLs into the code to see your Google Sheet data.")
