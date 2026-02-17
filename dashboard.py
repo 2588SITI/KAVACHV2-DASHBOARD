@@ -1,3 +1,4 @@
+# Version 2.0 - Fixed Google Sheet Links
 import streamlit as st
 import pandas as pd
 
@@ -14,8 +15,9 @@ st.title("🛡️ KAVACH Failure Analysis Dashboard")
 # 2. File > Share > Publish to web
 # 3. Select your Tab/Sheet, change 'Web Page' to 'CSV', and paste the links below:
 
-SHEET_1_URL = "PASTE_YOUR_FIRST_SHEET_CSV_URL_HERE"
-SHEET_2_URL = "PASTE_YOUR_NEW_SHEET_CSV_URL_HERE"
+# Replace the text inside the quotes with your ACTUAL links from Step 1
+SHEET_1_URL = "https://docs.google.com/spreadsheets/d/e/XXXXX/pub?output=csv"
+SHEET_2_URL = "https://docs.google.com/spreadsheets/d/e/YYYYY/pub?output=csv"
 
 @st.cache_data(ttl=300) # Refreshes every 5 minutes
 def load_live_data(url):
