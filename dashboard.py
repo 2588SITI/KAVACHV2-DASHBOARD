@@ -23,11 +23,25 @@ st.markdown("Analysis of Locomotive and Radio failures [Source: KAVACH Report]")
 st.sidebar.header("Filter Data")
 loco_filter = st.sidebar.multiselect("Select Loco No:", options=["37164", "30758", "37339", "39238"])
 
+<<<<<<< HEAD
 # 3. Key Metrics (Top Row)
 col1, col2, col3 = st.columns(3)
 col1.metric("Total Failures", "23") # Based on your current 23 entries 
 col2.metric("Most Frequent Issue", "Radio Packet Loss")
 col3.metric("Top Offender Loco", "37164")
+=======
+# Replace the text inside the quotes with your ACTUAL links from Step 1
+import streamlit as st
+import pandas as pd
+
+# 1. Define the variable clearly at the top
+SHEET_1_URL = "https://docs.google.com/spreadsheets/d/1imSFAMSxkEg63ix7n9h8v7mbObVbAZaY0X_0w3692G0/export?format=csv"
+
+# ... other code ...
+
+# 2. Now line 39 will work because the name exists!
+current_url = SHEET_1_URL
+>>>>>>> 9cb9d5e (Updating dashboard and adding requirements)
 
 # 4. Visualizations
 st.subheader("Failure Trends & Analysis")
