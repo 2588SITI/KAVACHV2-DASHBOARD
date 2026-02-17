@@ -15,8 +15,7 @@ st.title("🛡️ KAVACH Failure Analysis Dashboard")
 # 3. Select your Tab/Sheet, change 'Web Page' to 'CSV', and paste the links below:
 
 # Replace the text inside the quotes with your ACTUAL links from Step 1
-SHEET_1_URL = "https://docs.google.com/spreadsheets/d/1imSFAMSxkEg63ix7n9h8v7mbObVbAZaY0X_0w3692G0/edit?gid=1841114060#gid=1841114060"
-SHEET_2_URL = "https://docs.google.com/spreadsheets/d/1imSFAMSxkEg63ix7n9h8v7mbObVbAZaY0X_0w3692G0/edit?gid=344956628#gid=344956628"
+https://docs.google.com/spreadsheets/d/1imSFAMSxkEg63ix7n9h8v7mbObVbAZaY0X_0w3692G0/edit?usp=sharing
 
 @st.cache_data(ttl=300) # Refreshes every 5 minutes
 def load_live_data(url):
